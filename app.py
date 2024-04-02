@@ -13,30 +13,30 @@ def main():
     
     def user_input_features() -> pd.DataFrame:
         age = st.sidebar.number_input('Enter your Age', 0, 100, 0)
-        hypertension = st.sidebar.selectbox('Hypertension', options=[0, 1])
-        ever_married = st.sidebar.selectbox('Ever Married', options=[0,1])
-        work_type = st.sidebar.selectbox('Work Type', options=[0,1,2,3,4])
-        heart_disease = st.sidebar.selectbox('Heart Disease', options=[0,1])
-        smoking_status = st.sidebar.selectbox('Smoking Status', options=[0,1,2,3])
+        hypertension = st.sidebar.selectbox('Hypertension', options=["No", "Yes"])
+        ever_married = st.sidebar.selectbox('Ever Married', options=["No", "Yes"])
+        work_type = st.sidebar.selectbox('Work Type', options=["Private", "Self-employed", "Govt_job", "children", "Never_worked"])
+        heart_disease = st.sidebar.selectbox('Heart Disease', options=["No", "Yes"])
+        smoking_status = st.sidebar.selectbox('Smoking Status', options=["formerly smoked", "never smoked", "smokes", "Unknown"])
         bmi = st.sidebar.number_input('BMI', 0.0, 100.0, 0.0, step=0.1)
-        gender = st.sidebar.selectbox('Gender',options=[0,1,2])
+        gender = st.sidebar.selectbox('Gender',options=["Male", "Female", "Other"])
 
         features = pd.DataFrame({
             "age": [age],
-            "hypertension": [hypertension],
-            "ever_married": [ever_married],
-            "work_type": [work_type],
-            "heart_disease": [heart_disease],
-            "smoking_status": [smoking_status],
+            "hypertension": [1 if hypertension == "Yes" else 0],
+            "ever_married": [1 if ever_married == "Yes" else 0],
+            "work_type": [0 if work_type == "Private" else 1 if work_type == "Self-employed" else 2 if work_type == "Govt_job" else 3 if work_type == "children" else 4],
+            "heart_disease": [1 if heart_disease == "Yes" else 0],
+            "smoking_status": [0 if smoking_status == "formerly smoked" else 1 if smoking_status == "never smoked" else 2 if smoking_status == "smokes" else 3],
             "bmi": [bmi],
-            "gender": [gender]
+            "gender": [0 if gender == "Male" else 1 if gender == "Female" else 2]
         })
 
         return features
     
     st.set_page_config(
         page_title="Stroke Risk Prediction App",
-        page_icon="stroke.jpg"
+        page_icon="images/stroke.jpg"
     )
 
     st.title("Stroke Risk Prediction")
@@ -46,38 +46,37 @@ def main():
     col1, col2 = st.columns([1, 3])
 
     with col1:
-        st.image("stroke (1).jpg",
-                 caption="I'll help you diagnose your heart health! - Dr. Logistic Regression",
+        st.image("images/doctor.png",
+                 caption="I'll assist you in diagnosing your risk of stroke! - Dr. Logistic Regression",
                  width=150)
         submit = st.button("Predict")
     with col2:
         st.markdown("""
-        Did you know that machine learning models can help you
-        predict heart disease pretty accurately? In this app, you can
-        estimate your chance of heart disease (yes/no) in seconds!
+        Did you know that machine learning models can help you predict the likelihood of experiencing a stroke pretty 
+                    accurately? In this app, you can estimate your chance of having a stroke (yes/no) in seconds!
         
-        Here, a logistic regression model using an undersampling technique
-        was constructed using survey data of over 300k US residents from the year 2020.
-        This application is based on it because it has proven to be better than the random forest
-        (it achieves an accuracy of about 80%, which is quite good).
+        Here, a logistic regression model using an advanced technique
+        was constructed using survey data of over 5k individuals in the year 2022.
+        This application is based on it because it has demonstrated superior performance, 
+        achieving an impressive accuracy of 95%.
         
-        To predict your heart disease status, simply follow the steps bellow:
-        1. Enter the parameters that best describe you;
+        To predict your stroke risk, simply follow these steps:        
+        1. Enter the parameters that best describe you.
         2. Press the "Predict" button and wait for the result.
             
-        **Keep in mind that this result is not equivalent to a medical diagnosis!
-        This model would never be adopted by health care facilities because of its less
-        than perfect accuracy, so if you have any problems, consult a human doctor.**
+        **If healthcare professionals are interested in using it, they can 
+          incorporate this model into their practice as a supplementary 
+          tool for risk assessment and decision-making.**
         
-        **Author: Kamil Pytlak ([GitHub](https://github.com/kamilpytlak/heart-condition-checker))**
+        **Author: Heshan Chandeepa ([GitHub](https://github.com/HChandeepa/Stroke_Prediction_System-Machine_Learning_Approach))**
         
         You can see the steps of building the model, evaluating it, and cleaning the data itself
-        on my GitHub repo [here](https://github.com/kamilpytlak/data-analyses/tree/main/heart-disease-prediction). 
+        on my GitHub repo [here](https://github.com/HChandeepa/Stroke_Prediction_System-Machine_Learning_Approach). 
         """)
 
     stroke = load_dataset()
     st.sidebar.title("Feature Selection")
-    st.sidebar.image("stroke (1).jpg", width=100)
+    st.sidebar.image("images/brain.jpg", width=100)
    
 
     input_df = user_input_features()
@@ -106,16 +105,16 @@ def main():
         prediction = log_model.predict(new_df)
         if prediction == 0:
             st.markdown(f"**The probability that you'll have"
-                        f" heart disease is {round(prediction_prob[0][1] * 100, 2)}%."
+                        f" Stroke Risk is {round(prediction_prob[0][1] * 100, 2)}%."
                         f" You are healthy!**")
-            st.image("stroke.jpg",
-                     caption="Your heart seems to be okay! - Dr. Logistic Regression")
+            st.image("images/doctor ok.jpg",
+                     caption="Your Brain seems to be okay! - Dr. Logistic Regression")
         else:
             st.markdown(f"**The probability that you will have"
-                        f" heart disease is {round(prediction_prob[0][1] * 100, 2)}%."
+                        f" Stroke Risk is {round(prediction_prob[0][1] * 100, 2)}%."
                         f" It sounds like you are not healthy.**")
-            st.image("stroke (1).jpg",
-                     caption="I'm not satisfied with the condition of your heart! - Dr. Logistic Regression")
+            st.image("images/doctor-bad.jpg",
+                     caption="I'm not satisfied with the condition of your Brain! - Dr. Logistic Regression")
 
     # Display user input features
     with st.sidebar:
