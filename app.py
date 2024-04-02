@@ -39,6 +39,10 @@ def main():
         page_icon="stroke.jpg"
     )
 
+    st.title("Stroke Risk Prediction")
+    st.subheader("Are you concerned about the state of your brain? "
+"This app will assist you in diagnosing it!")
+
     col1, col2 = st.columns([1, 3])
 
     with col1:
@@ -74,7 +78,7 @@ def main():
     stroke = load_dataset()
     st.sidebar.title("Feature Selection")
     st.sidebar.image("stroke (1).jpg", width=100)
-    st.title("Stroke Risk Prediction App")
+   
 
     input_df = user_input_features()
 
@@ -104,7 +108,7 @@ def main():
             st.markdown(f"**The probability that you'll have"
                         f" heart disease is {round(prediction_prob[0][1] * 100, 2)}%."
                         f" You are healthy!**")
-            st.image("images/heart-okay.jpg",
+            st.image("stroke.jpg",
                      caption="Your heart seems to be okay! - Dr. Logistic Regression")
         else:
             st.markdown(f"**The probability that you will have"
