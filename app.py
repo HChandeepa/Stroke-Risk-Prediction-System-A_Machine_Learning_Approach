@@ -18,7 +18,7 @@ def main():
         work_type = st.sidebar.selectbox('Work Type', options=["Private", "Self-employed", "Govt_job", "children", "Never_worked"])
         heart_disease = st.sidebar.selectbox('Heart Disease', options=["No", "Yes"])
         smoking_status = st.sidebar.selectbox('Smoking Status', options=["formerly smoked", "never smoked", "smokes", "Unknown"])
-        bmi = st.sidebar.number_input('BMI', 0.0, 100.0, 0.0, step=0.1)
+        bmi = st.sidebar.number_input('BMI (weight/height²)', 0.0, 100.0, 0.0, step=0.1)
         gender = st.sidebar.selectbox('Gender',options=["Male", "Female", "Other"])
 
         features = pd.DataFrame({
