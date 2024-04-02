@@ -1,63 +1,122 @@
 import streamlit as st
-import pickle
 import pandas as pd
-import numpy as np
-from PIL import Image
+import pickle
 
-# Load the pre-trained model
-model = pickle.load(open('model.sav', 'rb'))
+DATASET_PATH = "stroke data.csv"
+LOG_MODEL_PATH = "model.pkl"
 
-# Title and sidebar header
-st.title('Stroke Prediction')
-st.sidebar.header('Enter Your Data')
-image = Image.open('stroke.jpg')
-st.image(image, '')
+def main():
+    @st.cache_data(persist=True)
+    def load_dataset() -> pd.DataFrame:
+        stroke_df = pd.read_csv(DATASET_PATH)
+        return stroke_df
+    
+    def user_input_features() -> pd.DataFrame:
+        age = st.sidebar.number_input('Enter your Age', 0, 100, 0)
+        hypertension = st.sidebar.selectbox('Hypertension', options=[0, 1])
+        ever_married = st.sidebar.selectbox('Ever Married', options=[0,1])
+        work_type = st.sidebar.selectbox('Work Type', options=[0,1,2,3,4])
+        heart_disease = st.sidebar.selectbox('Heart Disease', options=[0,1])
+        smoking_status = st.sidebar.selectbox('Smoking Status', options=[0,1,2,3])
+        bmi = st.sidebar.number_input('BMI', 0.0, 100.0, 0.0, step=0.1)
+        gender = st.sidebar.selectbox('Gender',options=[0,1,2])
 
-# Function to gather user input
-def user_report():
-    gender = st.sidebar.selectbox('Gender', ['Male', 'Female', 'Other'])
-    age = st.sidebar.number_input('Age', min_value=0, step=1)
-    hypertension = st.sidebar.selectbox('Hypertension', ['Yes', 'No'])
-    heart_disease = st.sidebar.selectbox('Heart Disease', ['Yes', 'No'])
-    ever_married = st.sidebar.selectbox('Ever Married', ['Yes', 'No'])
-    work_type = st.sidebar.selectbox('Work Type', ['Private', 'Self-employed', 'Govt_job', 'Children', 'Never_worked'])
-    bmi = st.sidebar.number_input('BMI', min_value=0.0, step=0.1)
-    smoking_status = st.sidebar.selectbox('Smoking Status', ['Unknown', 'Never smoked', 'formerly smoked', 'Smokes'])
+        features = pd.DataFrame({
+            "age": [age],
+            "hypertension": [hypertension],
+            "ever_married": [ever_married],
+            "work_type": [work_type],
+            "heart_disease": [heart_disease],
+            "smoking_status": [smoking_status],
+            "bmi": [bmi],
+            "gender": [gender]
+        })
 
+        return features
+    
+    st.set_page_config(
+        page_title="Stroke Risk Prediction App",
+        page_icon="stroke.jpg"
+    )
 
-    # Map categorical variables to numerical values
-    gender_mapping = {'Male': 0, 'Female': 1, 'Other': 2}
-    ever_married_mapping = {'Yes': 0, 'No': 1}
-    work_type_mapping = {'Private': 0, 'Self-employed': 1, 'Govt_job': 2, 'Children': 3, 'Never_worked': 4}
-    smoking_status_mapping = {'Unknown': 3, 'Never smoked': 1, 'formerly smoked': 0, 'Smokes': 2}
+    col1, col2 = st.columns([1, 3])
 
-    user_report_data = {
-        'hypertension': 1 if hypertension == 'Yes' else 0,
-        'heart_disease': 1 if heart_disease == 'Yes' else 0,
-        'ever_married': ever_married_mapping[ever_married],
-        'work_type': work_type_mapping[work_type],
-        'bmi': bmi,
-        'smoking_status': smoking_status_mapping[smoking_status],
-        'age': age,
-        'gender': gender_mapping[gender],
-    }
-    report_data = pd.DataFrame(user_report_data, index=[0])
-    return report_data
+    with col1:
+        st.image("stroke (1).jpg",
+                 caption="I'll help you diagnose your heart health! - Dr. Logistic Regression",
+                 width=150)
+        submit = st.button("Predict")
+    with col2:
+        st.markdown("""
+        Did you know that machine learning models can help you
+        predict heart disease pretty accurately? In this app, you can
+        estimate your chance of heart disease (yes/no) in seconds!
+        
+        Here, a logistic regression model using an undersampling technique
+        was constructed using survey data of over 300k US residents from the year 2020.
+        This application is based on it because it has proven to be better than the random forest
+        (it achieves an accuracy of about 80%, which is quite good).
+        
+        To predict your heart disease status, simply follow the steps bellow:
+        1. Enter the parameters that best describe you;
+        2. Press the "Predict" button and wait for the result.
+            
+        **Keep in mind that this result is not equivalent to a medical diagnosis!
+        This model would never be adopted by health care facilities because of its less
+        than perfect accuracy, so if you have any problems, consult a human doctor.**
+        
+        **Author: Kamil Pytlak ([GitHub](https://github.com/kamilpytlak/heart-condition-checker))**
+        
+        You can see the steps of building the model, evaluating it, and cleaning the data itself
+        on my GitHub repo [here](https://github.com/kamilpytlak/data-analyses/tree/main/heart-disease-prediction). 
+        """)
 
-# Display user data
-user_data = user_report()
-st.header('Patient Data')
-st.write(user_data)
+    stroke = load_dataset()
+    st.sidebar.title("Feature Selection")
+    st.sidebar.image("stroke (1).jpg", width=100)
+    st.title("Stroke Risk Prediction App")
 
-# Predict stroke risk
-if st.button('Predict Stroke Risk'):
-    try:
-        stroke_prediction = model.predict(user_data)
-        probability = model.predict_proba(user_data)[:,1]
-        if stroke_prediction == 1:
-            st.subheader('Patient is at risk of stroke with a probability of {:.2f}%'.format(probability[0] * 100))
+    input_df = user_input_features()
+
+    # Ensure categorical features are one-hot encoded consistently
+    input_df['ever_married'] = input_df['ever_married'].astype(str)
+    input_df['work_type'] = input_df['work_type'].astype(str)
+    input_df['smoking_status'] = input_df['smoking_status'].astype(str)
+    input_df = pd.get_dummies(input_df, columns=['ever_married', 'work_type', 'smoking_status'])
+
+    # Ensure input features match training features
+    missing_cols = set(stroke.columns) - set(input_df.columns)
+    for col in missing_cols:
+        input_df[col] = 0
+
+    input_df = input_df[stroke.columns]  # Reorder columns to match training data
+
+    log_model = pickle.load(open(LOG_MODEL_PATH, "rb"))
+
+    selected_columns = ['age','gender', 'hypertension', 'heart_disease', 'ever_married', 'work_type','bmi','smoking_status']
+    new_df = input_df[selected_columns]
+
+    if submit:
+        
+        prediction_prob = log_model.predict_proba(new_df)
+        prediction = log_model.predict(new_df)
+        if prediction == 0:
+            st.markdown(f"**The probability that you'll have"
+                        f" heart disease is {round(prediction_prob[0][1] * 100, 2)}%."
+                        f" You are healthy!**")
+            st.image("images/heart-okay.jpg",
+                     caption="Your heart seems to be okay! - Dr. Logistic Regression")
         else:
-            st.subheader('Patient is not at risk of stroke with a probability of {:.2f}%'.format((1 - probability[0]) * 100))
-    except Exception as e:
-        st.error('An error occurred during prediction. Please check your input data and try again.')
-        st.error(str(e))
+            st.markdown(f"**The probability that you will have"
+                        f" heart disease is {round(prediction_prob[0][1] * 100, 2)}%."
+                        f" It sounds like you are not healthy.**")
+            st.image("stroke (1).jpg",
+                     caption="I'm not satisfied with the condition of your heart! - Dr. Logistic Regression")
+
+    # Display user input features
+    with st.sidebar:
+        st.header("User Input Features")
+        st.write(new_df)
+
+if __name__ == "__main__":
+    main()
