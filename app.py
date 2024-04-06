@@ -13,13 +13,13 @@ def main():
     
     def user_input_features() -> pd.DataFrame:
         age = st.sidebar.number_input('Enter your Age', 0, 100, 0)
+        gender = st.sidebar.selectbox('Gender',options=["Male", "Female", "Other"])
         hypertension = st.sidebar.selectbox('Hypertension', options=["No", "Yes"])
         ever_married = st.sidebar.selectbox('Ever Married', options=["No", "Yes"])
         work_type = st.sidebar.selectbox('Work Type', options=["Private", "Self-employed", "Govt_job", "children", "Never_worked"])
         heart_disease = st.sidebar.selectbox('Heart Disease', options=["No", "Yes"])
         smoking_status = st.sidebar.selectbox('Smoking Status', options=["formerly smoked", "never smoked", "smokes", "Unknown"])
         bmi = st.sidebar.number_input('BMI (weight/height²)', 0.0, 100.0, 0.0, step=0.1)
-        gender = st.sidebar.selectbox('Gender',options=["Male", "Female", "Other"])
         Residence_type = st.sidebar.selectbox('Residence Type',options=["Urban","Rural"])
         avg_glucose_level = st.sidebar.number_input('Enter Glucose Level',0.0,300.0,0.0)
 
